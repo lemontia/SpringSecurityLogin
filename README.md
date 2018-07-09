@@ -16,4 +16,4 @@
 ### ROLE 에 따라 접근 가능한 페이지 분리.
 - 현재 ADMIN 권한은 이메일로 구분하여 주는것으로 설정되어 있음
 - 상황에 따라 수정가능
--- 련파일: kr.demonic.config.security.CustomUserDetailService.authorities()
+- 관련파일: kr.demonic.config.security.CustomUserDetailService.authorities()
