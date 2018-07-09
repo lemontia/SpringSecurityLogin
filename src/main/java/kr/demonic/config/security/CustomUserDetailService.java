@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * [Spring Security] UserDetailsService 인터페이스 구현체
+ */
 @Service
 public class CustomUserDetailService implements UserDetailsService {
     @Autowired

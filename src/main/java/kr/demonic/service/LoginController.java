@@ -42,14 +42,19 @@ public class LoginController {
     @Autowired
     private SessionFactory sessionFactory;
 
+    // Spring Security UserDetailsService 구현체
     @Autowired
     private CustomUserDetailService customUserDetailService;
+
+    // 회원가입 중 동일한 정보가 있는 경우 로그인 시키기 위해 사용되는 인터페이스
+    @Autowired
+    CustomAuthenticationProvider customAuthenticationProvider;
 
 
     @RequestMapping(path = {"/", "/main"})
     public String main(Model model, HttpSession session){
-        String id = session.getAttribute("email") == null ? (String) session.getAttribute("email") : "";
-        model.addAttribute("email", id);
+        String email = session.getAttribute("email") == null ? (String) session.getAttribute("email") : "";
+        model.addAttribute("email", email);
         return "main";
     }
 
@@ -127,30 +132,26 @@ public class LoginController {
     }
 
 
-    // 회원가입 중 동일한 정보가 있는 경우 로그인 시키기 위해 사용되는 인터페이스
-    @Autowired
-    CustomAuthenticationProvider customAuthenticationProvider;
-
     // 회원가입
     @RequestMapping(path="/signup", method = RequestMethod.POST)
-    public String signup(@ModelAttribute Member member, HttpServletRequest request, RedirectAttributes redirectAttributes){
+    public String signup(@ModelAttribute Member member, HttpServletRequest request){
         PasswordEncoder pe = new BCryptPasswordEncoder();
         member.setPassword(pe.encode(member.getPassword()));
 
         Member searchMember = memberRepository.findByEmail(member.getEmail());
         if (searchMember == null){
             memberRepository.save(member);
-        }else{
-            // 이미 가입한 계정이면 로그인 진행 함
-            // 세션처리
-            sessionFactory.setSession(request, member.getEmail());
-            // Auth 처리
-            UserDetails userDetails = customUserDetailService.loadUserByUsername(searchMember.getEmail());
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(member.getEmail(), member.getPassword(), userDetails.getAuthorities());
-            customAuthenticationProvider.authenticate(usernamePasswordAuthenticationToken);
-            if (usernamePasswordAuthenticationToken.isAuthenticated()) {
-                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-            }
+        }
+
+        // 로그인 처리 진행
+        // 세션처리
+        sessionFactory.setSession(request, member.getEmail());
+        // Auth 처리
+        UserDetails userDetails = customUserDetailService.loadUserByUsername(searchMember.getEmail());
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(member.getEmail(), member.getPassword(), userDetails.getAuthorities());
+        customAuthenticationProvider.authenticate(usernamePasswordAuthenticationToken);
+        if (usernamePasswordAuthenticationToken.isAuthenticated()) {
+            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
         }
 
         return "redirect:/";
